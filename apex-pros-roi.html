@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dispatch ROI Analysis · Apex Pros</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600;700&family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,500;6..12,600;6..12,700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #003A5D;
+    --primary-blue: #0072ED;
+    --deep-blue: #004EA1;
+    --orange: #FF8300;
+    --light-blue: #D5EBFF;
+    --very-light-blue: #E8F3FD;
+    --white: #FFFFFF;
+    --black: #000000;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--very-light-blue);
+    color: var(--black);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    padding: 36px 48px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -60px;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,114,237,0.18);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 40px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,131,0,0.15);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .wordmark span {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--white);
+    letter-spacing: 0.01em;
+  }
+  .header-eyebrow {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .header-title {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.25;
+    max-width: 680px;
+    margin-bottom: 8px;
+  }
+  .header-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 1060px; margin: 0 auto; padding: 36px 24px 60px; }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+
+  /* SLIDERS PANEL */
+  .sliders-panel {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 6px rgba(0,58,93,0.07);
+  }
+  .sliders-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 22px 32px;
+  }
+  @media (max-width: 720px) {
+    .sliders-grid { grid-template-columns: 1fr 1fr; }
+    .header { padding: 28px 20px; }
+    .header-title { font-size: 22px; }
+  }
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 7px;
+  }
+  .slider-group label .val {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 15px;
+    color: var(--primary-blue);
+    font-weight: 600;
+  }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--primary-blue);
+    height: 4px;
+    cursor: pointer;
+  }
+  .fixed-badge {
+    background: var(--very-light-blue);
+    border: 1px solid var(--light-blue);
+    border-radius: 6px;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+  }
+  .fixed-badge .label { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .fixed-badge .badge-val {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-blue);
+  }
+  .fixed-pill {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--light-blue);
+    color: var(--deep-blue);
+    border-radius: 99px;
+    padding: 2px 7px;
+    margin-left: 8px;
+  }
+  .split-note {
+    font-size: 12px;
+    color: #777;
+    margin-top: 4px;
+  }
+
+  /* METRIC CARDS */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 720px) { .metrics-row { grid-template-columns: 1fr 1fr; } }
+  .metric-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px 18px;
+    box-shadow: 0 1px 6px rgba(0,58,93,0.07);
+    border-top: 3px solid var(--primary-blue);
+  }
+  .metric-card .metric-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  .metric-card .metric-val {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .metric-card .metric-sub {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+  }
+  .metric-card.orange-top { border-top-color: var(--orange); }
+
+  /* SCENARIO CARDS */
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 820px) { .scenarios-grid { grid-template-columns: 1fr 1fr; } }
+  .scenario-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 22px 20px;
+    box-shadow: 0 1px 6px rgba(0,58,93,0.07);
+    border: 1px solid #e0ecf7;
+  }
+  .scenario-card.dispatch-card {
+    border: 2px solid var(--primary-blue);
+    background: #f0f7ff;
+  }
+  .scenario-card .sc-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 6px;
+  }
+  .scenario-card .sc-title {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 14px;
+    line-height: 1.3;
+  }
+  .scenario-card .sc-per-run {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+  }
+  .scenario-card .sc-cost {
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 2px;
+  }
+  .scenario-card.dispatch-card .sc-cost { color: var(--primary-blue); }
+  .scenario-card .sc-annual {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 14px;
+  }
+  .sc-breakdown {
+    border-top: 1px solid #e5eef7;
+    padding-top: 12px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.8;
+  }
+  .sc-breakdown span { color: var(--navy); font-weight: 600; }
+  .opp-badge {
+    display: inline-block;
+    background: #fff3e8;
+    border-left: 3px solid var(--orange);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #b85c00;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  /* CHART */
+  .chart-panel {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 6px rgba(0,58,93,0.07);
+  }
+  .chart-wrap { position: relative; height: 280px; }
+
+  /* HIDDEN COSTS */
+  .hidden-costs {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 6px rgba(0,58,93,0.07);
+    border-left: 4px solid var(--orange);
+  }
+  .hc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 620px) { .hc-grid { grid-template-columns: 1fr; } }
+  .hc-item { padding: 14px 16px; background: #fff8f0; border-radius: 8px; }
+  .hc-item .hc-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
+  .hc-item .hc-desc { font-size: 12.5px; color: #555; line-height: 1.5; }
+  .hc-item .hc-num { font-size: 13px; font-weight: 700; color: var(--orange); margin-top: 4px; }
+
+  /* NEXSTAR PROMO */
+  .promo-panel {
+    background: var(--very-light-blue);
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin-bottom: 28px;
+    border: 1px solid var(--light-blue);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .promo-badge {
+    background: var(--orange);
+    color: var(--white);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+  .promo-text { font-size: 13px; color: var(--navy); font-weight: 500; flex: 1; }
+  .promo-text strong { color: var(--primary-blue); }
+
+  /* VERDICT */
+  .verdict {
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 36px 36px;
+    margin-bottom: 28px;
+  }
+  .verdict .section-label { color: var(--orange); }
+  .verdict .section-title { color: var(--white); }
+  .verdict-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 620px) { .verdict-cards { grid-template-columns: 1fr; } }
+  .verdict-card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    text-align: center;
+  }
+  .verdict-card .vc-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-bottom: 8px; }
+  .verdict-card .vc-val { font-family: 'IBM Plex Serif', serif; font-size: 30px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .verdict-card .vc-sub { font-size: 12px; color: rgba(255,255,255,0.5); }
+  .verdict-card.highlight .vc-val { color: #6dd4fa; }
+  .verdict-copy {
+    font-size: 14.5px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.7;
+    max-width: 720px;
+  }
+  .verdict-copy strong { color: var(--white); }
+
+  /* FOOTER */
+  .footer {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(0,58,93,0.06);
+  }
+  .footer-brand { display: flex; align-items: center; gap: 9px; }
+  .footer-brand span {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--navy);
+  }
+  .footer-note { font-size: 11px; color: #888; line-height: 1.6; max-width: 680px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="wordmark">
+      <!-- D monogram white -->
+      <svg width="28" height="24" viewBox="0 0 99 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M95.6062 24.3403C93.4124 19.2928 90.1793 14.9183 86.138 11.2167C82.0966 7.62739 77.1316 4.82321 71.3583 2.91636C65.816 0.897339 59.5806 0 52.6528 0H21.4767V31.6312L0 38.4735L40.6441 50.1389V26.8079V18.5076H52.6528C57.3868 18.5076 61.5437 19.0685 65.0077 20.3023C68.2407 21.424 71.0119 22.8822 73.2057 24.789C75.2842 26.6958 76.9007 28.8271 77.9399 31.2947C79.0945 33.9867 79.6718 36.903 79.6718 40.2681V40.4924C79.6718 43.8575 79.0945 46.7738 77.9399 49.578C76.7852 52.27 75.1688 54.4013 73.0902 56.3081C70.8964 58.2148 68.1253 59.8974 64.7767 61.0192C61.3127 62.2529 57.0404 62.8138 52.3064 62.8138H41.9143V81.4336H52.3064C59.2344 81.4336 65.5851 80.424 71.1274 78.5172C76.9007 76.4983 81.8658 73.6939 85.907 69.9926C90.0639 66.291 93.2969 61.8042 95.4907 56.7568C97.6847 51.7091 98.7238 46.3251 98.7238 40.4924V40.3803C98.8393 34.6598 97.8002 29.2758 95.6062 24.3403Z" fill="white"/>
+      </svg>
+      <span>Dispatch<sup style="font-size:9px;font-weight:400;">®</sup></span>
+    </div>
+  </div>
+  <div class="header-eyebrow">ROI Analysis · Apex Pros · Columbus &amp; Dayton, OH</div>
+  <div class="header-title">What parts runs are really costing Apex Pros, and what Dispatch changes.</div>
+  <div class="header-sub">HVAC · Plumbing · Electrical · 8 Locations · Columbus &amp; Dayton Metro</div>
+</div>
+
+<div class="container">
+
+  <!-- SLIDERS -->
+  <div class="sliders-panel">
+    <div class="section-label">Adjust Your Numbers</div>
+    <div class="section-title">Configure Apex Pros' Delivery Model</div>
+    <div class="sliders-grid">
+
+      <div class="slider-group">
+        <label>Runs per week <span class="val" id="v-runs">5</span></label>
+        <input type="range" id="s-runs" min="1" max="15" step="1" value="5" />
+        <div class="split-note">Meeting notes: 5–6/wk confirmed</div>
+      </div>
+
+      <div class="slider-group">
+        <label>% via Warehouse Staff <span class="val" id="v-wpct">60%</span></label>
+        <input type="range" id="s-wpct" min="0" max="100" step="5" value="60" />
+        <div class="split-note">Primary method</div>
+      </div>
+
+      <div class="slider-group">
+        <label>% Tech Self-Pickup <span class="val" id="v-tpct">30%</span></label>
+        <input type="range" id="s-tpct" min="0" max="100" step="5" value="30" />
+        <div class="split-note">Home Depot / Lowes</div>
+      </div>
+
+      <div class="slider-group">
+        <label>Warehouse Rate ($/hr) <span class="val" id="v-wrate">$20.50</span></label>
+        <input type="range" id="s-wrate" min="19" max="30" step="0.50" value="20.50" />
+        <div class="split-note">Range confirmed: $19–$22/hr</div>
+      </div>
+
+      <div class="slider-group">
+        <label>Tech Rate ($/hr) <span class="val" id="v-trate">$32</span></label>
+        <input type="range" id="s-trate" min="28" max="60" step="1" value="32" />
+        <div class="split-note">Columbus avg: $31.71/hr (Indeed, Apr 2026)</div>
+      </div>
+
+      <div class="slider-group">
+        <label>Round-trip Time (hrs) <span class="val" id="v-rtime">1.5 hrs</span></label>
+        <input type="range" id="s-rtime" min="0.5" max="3" step="0.25" value="1.5" />
+      </div>
+
+      <div class="slider-group">
+        <label>Avg Part Cost (self-pickup) <span class="val" id="v-part">$80</span></label>
+        <input type="range" id="s-part" min="20" max="300" step="5" value="80" />
+        <div class="split-note">20% markup vs. wholesale</div>
+      </div>
+
+      <div>
+        <div class="fixed-badge">
+          <span class="label">Management Rate <span class="fixed-pill">Fixed</span></span>
+          <span class="badge-val">$57.69 / hr</span>
+        </div>
+        <div class="split-note" style="margin-top:6px;">Based on $120k annual salary / 2,080 hrs</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- METRIC SUMMARY CARDS -->
+  <div class="section-label">At a Glance</div>
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="metric-label">Annual Runs</div>
+      <div class="metric-val" id="m-annual-runs">260</div>
+      <div class="metric-sub">+untracked incidents</div>
+    </div>
+    <div class="metric-card orange-top">
+      <div class="metric-label">True Cost / Run (Current)</div>
+      <div class="metric-val" id="m-cost-run">$82</div>
+      <div class="metric-sub">Blended, all-in w/ opportunity</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Dispatch Cost / Run</div>
+      <div class="metric-val" style="color:var(--primary-blue);">$78</div>
+      <div class="metric-sub">ASAP delivery, fixed rate</div>
+    </div>
+    <div class="metric-card orange-top">
+      <div class="metric-label">Blocked Billable / Year</div>
+      <div class="metric-val" id="m-billable">$27,300</div>
+      <div class="metric-sub">When techs leave the job</div>
+    </div>
+  </div>
+
+  <!-- SCENARIO CARDS -->
+  <div class="section-label" style="margin-bottom:10px;">Scenario Breakdown</div>
+  <div class="scenarios-grid">
+
+    <div class="scenario-card">
+      <div class="sc-label">Current · Primary</div>
+      <div class="sc-title">Warehouse Staff Run</div>
+      <div class="sc-per-run">All-in cost per run</div>
+      <div class="sc-cost" id="sc-w-perrun">$73</div>
+      <div class="sc-annual" id="sc-w-annual">$28,470 / year</div>
+      <div class="sc-breakdown">
+        Labor out: <span id="sc-w-labor">$30.75</span><br/>
+        Mileage + wear: <span>$10.04</span><br/>
+        Lost warehouse time: <span id="sc-w-opp">$30.75</span>
+        <div class="opp-badge">⚠ You pay twice: going and staying</div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="sc-label">Current · Secondary</div>
+      <div class="sc-title">Tech Self-Pickup (HD/Lowes)</div>
+      <div class="sc-per-run">All-in cost per run</div>
+      <div class="sc-cost" id="sc-t-perrun">$105</div>
+      <div class="sc-annual" id="sc-t-annual">$40,950 / year</div>
+      <div class="sc-breakdown">
+        Tech labor on road: <span id="sc-t-labor">$52.50</span><br/>
+        Parts markup (20%): <span id="sc-t-markup">$16.00</span><br/>
+        Blocked billable: <span id="sc-t-bill">$300</span>
+        <div class="opp-badge">⚠ 20% price premium + $200/hr off the job</div>
+      </div>
+    </div>
+
+    <div class="scenario-card">
+      <div class="sc-label">Current · Blended</div>
+      <div class="sc-title">Mixed Model (Your Reality)</div>
+      <div class="sc-per-run">True blended cost / run</div>
+      <div class="sc-cost" id="sc-b-perrun">$82</div>
+      <div class="sc-annual" id="sc-b-annual">$32,370 / year</div>
+      <div class="sc-breakdown">
+        Warehouse share: <span id="sc-b-wpct">60%</span><br/>
+        Tech share: <span id="sc-b-tpct">30%</span><br/>
+        Management share: <span>10%</span>
+        <div class="opp-badge">⚠ Stacked disruptions across 3 roles</div>
+      </div>
+    </div>
+
+    <div class="scenario-card dispatch-card">
+      <div class="sc-label">Dispatch · DispatchOne</div>
+      <div class="sc-title">Same-Day Delivery, 85% SLA</div>
+      <div class="sc-per-run">Fixed cost per run</div>
+      <div class="sc-cost" id="sc-d-perrun">$78</div>
+      <div class="sc-annual" id="sc-d-annual">$20,280 / year</div>
+      <div class="sc-breakdown">
+        Real-time tracking: <span>✓</span><br/>
+        ServiceTitan integration: <span>✓</span><br/>
+        85% SLA guaranteed: <span>✓</span>
+        <div class="opp-badge" style="background:#e8f7ee;border-left-color:#2da865;color:#1a7a40;">✓ Tech stays on job. Warehouse stays in warehouse.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BAR CHART -->
+  <div class="chart-panel">
+    <div class="section-label">Annual Cost Comparison</div>
+    <div class="section-title">What each model costs Apex Pros per year</div>
+    <div class="chart-wrap">
+      <canvas id="roiChart"></canvas>
+    </div>
+  </div>
+
+  <!-- HIDDEN COSTS -->
+  <div class="hidden-costs">
+    <div class="section-label">Hidden Costs</div>
+    <div class="section-title" style="margin-bottom:18px;">What's not on the invoice, but shows up in the P&L</div>
+    <div class="hc-grid">
+      <div class="hc-item">
+        <div class="hc-title">20% Parts Price Premium</div>
+        <div class="hc-desc">When techs buy at Home Depot or Lowes, Apex Pros pays MSRP instead of Ferguson wholesale. On every self-sourced run, the part itself costs more before you count the tech's time.</div>
+        <div class="hc-num" id="hc-markup-annual">$4,160 / yr in markup alone (est.)</div>
+      </div>
+      <div class="hc-item">
+        <div class="hc-title">Warehouse Throughput Drag</div>
+        <div class="hc-desc">Every warehouse run pulls a person off the Dublin Road or Dayton floor. The BMI system and daily Ferguson pulls don't stop while they're in traffic; the backlog does.</div>
+        <div class="hc-num" id="hc-wh-drag">$8,034 / yr in double labor (est.)</div>
+      </div>
+      <div class="hc-item">
+        <div class="hc-title">Blocked Billable Revenue</div>
+        <div class="hc-desc">NATE-certified techs billing at $200/hr don't generate revenue while sitting in a Home Depot parking lot. That's not a delivery cost; it's an opportunity cost hiding inside a parts run.</div>
+        <div class="hc-num" id="hc-billable-annual">$27,300 / yr in blocked billable (est.)</div>
+      </div>
+      <div class="hc-item">
+        <div class="hc-title">Return Visit Truck Rolls</div>
+        <div class="hc-desc">Industry data shows ~25% of emergency part runs result in a return visit the next day when the wrong part arrives or the job stalls. Each callback costs tech time, mileage, and customer goodwill.</div>
+        <div class="hc-num" id="hc-return">$5,850 / yr in return visits (est.)</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- VERDICT -->
+  <div class="verdict">
+    <div class="section-label">The Verdict</div>
+    <div class="section-title">The question isn't whether Apex Pros can afford Dispatch.</div>
+    <div class="verdict-cards">
+      <div class="verdict-card">
+        <div class="vc-label">Current True All-In Cost</div>
+        <div class="vc-val" id="v-allin">$65,830</div>
+        <div class="vc-sub">Labor + markup + blocked billable</div>
+      </div>
+      <div class="verdict-card highlight">
+        <div class="vc-label">Dispatch Annual Cost</div>
+        <div class="vc-val" id="v-dispatch-net">$20,280</div>
+        <div class="vc-sub">Fixed rate, no hidden labor</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">Annual Savings / Opportunity</div>
+        <div class="vc-val" id="v-savings">$46,767</div>
+        <div class="vc-sub">What staying in-house costs extra</div>
+      </div>
+    </div>
+    <div class="verdict-copy" id="verdict-copy">
+      Apex Pros is currently spending an estimated <strong id="vc-allin2">$65,830/yr</strong> in combined labor, parts markups, and blocked billable revenue to run parts 5 times a week with warehouse staff and field techs. Dispatch's ASAP delivery at <strong>$78/run ($20,280/yr)</strong> keeps NATE-certified technicians billing at the job site, keeps warehouse staff at the Dublin Road and Dayton floors, and eliminates the 20% Home Depot markup entirely. The question isn't whether they can afford Dispatch. It's whether they can afford to keep doing it this way.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-brand">
+      <svg width="18" height="15" viewBox="0 0 99 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M95.6062 24.3403C93.4124 19.2928 90.1793 14.9183 86.138 11.2167C82.0966 7.62739 77.1316 4.82321 71.3583 2.91636C65.816 0.897339 59.5806 0 52.6528 0H21.4767V31.6312L0 38.4735L40.6441 50.1389V26.8079V18.5076H52.6528C57.3868 18.5076 61.5437 19.0685 65.0077 20.3023C68.2407 21.424 71.0119 22.8822 73.2057 24.789C75.2842 26.6958 76.9007 28.8271 77.9399 31.2947C79.0945 33.9867 79.6718 36.903 79.6718 40.2681V40.4924C79.6718 43.8575 79.0945 46.7738 77.9399 49.578C76.7852 52.27 75.1688 54.4013 73.0902 56.3081C70.8964 58.2148 68.1253 59.8974 64.7767 61.0192C61.3127 62.2529 57.0404 62.8138 52.3064 62.8138H41.9143V81.4336H52.3064C59.2344 81.4336 65.5851 80.424 71.1274 78.5172C76.9007 76.4983 81.8658 73.6939 85.907 69.9926C90.0639 66.291 93.2969 61.8042 95.4907 56.7568C97.6847 51.7091 98.7238 46.3251 98.7238 40.4924V40.3803C98.8393 34.6598 97.8002 29.2758 95.6062 24.3403Z" fill="#003A5D"/>
+      </svg>
+      <span>Dispatch<sup style="font-size:8px;font-weight:400;">®</sup></span>
+    </div>
+    <div class="footer-note">
+      Assumptions: 12 mi avg round trip · IRS mileage rate $0.67/mi · $2 vehicle wear/run · 20% productivity loss when single tech runs solo · 25% return-visit rate · Billable rate $200/hr · Markup based on MSRP vs. Ferguson wholesale pricing · Management rate $57.69/hr ($120k salary / 2,080 hrs) · Tech rate $32/hr based on Indeed Columbus, OH data (April 2026) · Untracked runs not included in base volume.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString();
+const fmtD = n => '$' + n.toFixed(2);
+
+let chart;
+
+function initChart(labels, data) {
+  const ctx = $('roiChart').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: ['#FF8300','#FF8300','#003A5D','#0072ED'],
+        borderRadius: 7,
+        barThickness: 56,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + fmt(ctx.parsed.y)
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => '$' + (v/1000).toFixed(0) + 'k',
+            font: { family: 'Nunito Sans', size: 12 },
+            color: '#666'
+          },
+          grid: { color: '#eef3f8' }
+        },
+        x: {
+          ticks: { font: { family: 'Nunito Sans', size: 12 }, color: '#333' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function update() {
+  const runs    = +$('s-runs').value;
+  const wpct    = +$('s-wpct').value / 100;
+  const tpct    = +$('s-tpct').value / 100;
+  const mpct    = Math.max(0, 1 - wpct - tpct);
+  const wrate   = +$('s-wrate').value;
+  const trate   = +$('s-trate').value;
+  const mgrate  = 57.69;
+  const rtime   = +$('s-rtime').value;
+  const partCost = +$('s-part').value;
+  const billable = 200;
+  const dispatchAOP = 78;
+  const miles   = 12;
+  const irs     = 0.67;
+  const wear    = 2.00;
+  const mileage = miles * irs + wear;
+  const annualRuns = runs * 52;
+
+  // Warehouse: double labor
+  const wLaborOut = wrate * rtime;
+  const wOpp      = wrate * rtime;
+  const wPerRun   = wLaborOut + mileage + wOpp;
+  const wAnnual   = wPerRun * annualRuns * wpct;
+
+  // Tech self-pickup: labor + markup + blocked billable
+  const tLabor   = trate * rtime;
+  const tMarkup  = partCost * 0.20;
+  const tBillable = billable * rtime;
+  const tPerRun  = tLabor + mileage + tMarkup + tBillable;
+  const tAnnual  = tPerRun * annualRuns * tpct;
+
+  // Management
+  const mgPerRun = (mgrate * rtime) + mileage;
+  const mgAnnual = mgPerRun * annualRuns * mpct;
+
+  // Blended
+  const blendedPerRun = (wPerRun * wpct) + (tPerRun * tpct) + (mgPerRun * mpct);
+  const blendedAnnual = blendedPerRun * annualRuns;
+
+  // Dispatch
+  const dispatchAnnual = dispatchAOP * annualRuns;
+
+  // Hidden costs
+  const blockedBillable = trate > 0 ? (tBillable * annualRuns * tpct) : 0;
+  const whDrag = wOpp * annualRuns * wpct;
+  const markupAnnual = tMarkup * annualRuns * tpct;
+  const returnVisit = annualRuns * 0.25 * ((trate * 0.5) + mileage + 12.50);
+
+  // True all-in
+  const trueAllin = blendedAnnual + blockedBillable + markupAnnual + returnVisit;
+  const savings = trueAllin - dispatchAnnual;
+
+  // UI updates
+  $('v-runs').textContent = runs;
+  $('v-wpct').textContent = Math.round(wpct*100) + '%';
+  $('v-tpct').textContent = Math.round(tpct*100) + '%';
+  $('v-wrate').textContent = '$' + (+$('s-wrate').value).toFixed(2);
+  $('v-trate').textContent = '$' + (+$('s-trate').value);
+  $('v-rtime').textContent = rtime + ' hrs';
+  $('v-part').textContent  = '$' + partCost;
+
+  $('m-annual-runs').textContent = annualRuns.toLocaleString();
+  $('m-cost-run').textContent    = fmt(blendedPerRun).replace('$','') < 1 ? '$0' : fmt(blendedPerRun);
+  $('m-billable').textContent    = fmt(blockedBillable + markupAnnual);
+
+  $('sc-w-perrun').textContent  = fmt(wPerRun);
+  $('sc-w-annual').textContent  = fmt(wAnnual) + ' / year';
+  $('sc-w-labor').textContent   = fmtD(wLaborOut);
+  $('sc-w-opp').textContent     = fmtD(wOpp);
+
+  $('sc-t-perrun').textContent  = fmt(tPerRun);
+  $('sc-t-annual').textContent  = fmt(tAnnual) + ' / year';
+  $('sc-t-labor').textContent   = fmtD(tLabor);
+  $('sc-t-markup').textContent  = fmtD(tMarkup);
+  $('sc-t-bill').textContent    = fmt(tBillable);
+
+  $('sc-b-perrun').textContent  = fmt(blendedPerRun);
+  $('sc-b-annual').textContent  = fmt(blendedAnnual) + ' / year';
+  $('sc-b-wpct').textContent    = Math.round(wpct*100) + '%';
+  $('sc-b-tpct').textContent    = Math.round(tpct*100) + '%';
+
+  $('sc-d-perrun').textContent  = fmt(dispatchAOP);
+  $('sc-d-annual').textContent  = fmt(dispatchAnnual) + ' / year';
+
+  // Hidden costs
+  $('hc-markup-annual').textContent = fmt(markupAnnual) + ' / yr in markup alone (est.)';
+  $('hc-wh-drag').textContent       = fmt(whDrag) + ' / yr in double labor (est.)';
+  $('hc-billable-annual').textContent = fmt(blockedBillable) + ' / yr in blocked billable (est.)';
+  $('hc-return').textContent        = fmt(returnVisit) + ' / yr in return visits (est.)';
+
+  // Verdict
+  $('v-allin').textContent    = fmt(trueAllin);
+  $('v-dispatch-net').textContent = fmt(dispatchAnnual);
+  $('v-savings').textContent  = fmt(savings);
+  $('vc-allin2').textContent  = fmt(trueAllin) + '/yr';
+
+  // Metric card
+  $('m-cost-run').textContent = '$' + Math.round(blendedPerRun);
+
+  // Chart
+  initChart(
+    ['Warehouse\nOnly', 'Tech Self-Pickup\n(w/ Billable Loss)', 'Blended\nCurrent', 'Dispatch'],
+    [
+      wAnnual + whDrag,
+      tAnnual + blockedBillable + markupAnnual,
+      blendedAnnual + blockedBillable + markupAnnual + returnVisit,
+      dispatchAnnual
+    ]
+  );
+}
+
+['s-runs','s-wpct','s-tpct','s-wrate','s-trate','s-rtime','s-part'].forEach(id => {
+  $(id).addEventListener('input', update);
+});
+
+update();
+</script>
+</body>
+</html>
